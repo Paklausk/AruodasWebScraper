@@ -69,13 +69,15 @@ namespace AruodasWebScraper.Scrap
     {
         public HtmlNode MainContentNode { get; set; }
         public HtmlNode RecordsTableHeaderRowNode { get; set; }
+        public HtmlNode SearchMarkRowNode { get; set; }
         public HtmlNodeCollection RecordsRowNodes { get; set; }
         public HtmlNode PagingNode { get; set; }
         public AruodasPage(HtmlDocument htmlDoc)
         {
             MainContentNode = htmlDoc.DocumentNode.SelectSingleNode("//div[@class='main-content']");
             RecordsTableHeaderRowNode = MainContentNode.SelectSingleNode("//table[@class='list-search']/thead/tr");
-            RecordsRowNodes = MainContentNode.SelectNodes("//table[@class='list-search']/tbody/tr");
+            SearchMarkRowNode = MainContentNode.SelectSingleNode("//table[@class='list-search']/tbody/tr[@class='search-mark']");
+            RecordsRowNodes = MainContentNode.SelectNodes("//table[@class='list-search']/tbody/tr[contains(@class, 'list-row')]");
             PagingNode = MainContentNode.SelectSingleNode("//div[@class='pagination']");
         }
     }
@@ -96,7 +98,7 @@ namespace AruodasWebScraper.Scrap
         {
             AruodasBaseData baseData = new AruodasBaseData();
             baseData.PagesCount = Convert.ToInt32(page.PagingNode.SelectSingleNode("a[last()-1]").InnerText);
-            string listCountText = page.RecordsTableHeaderRowNode.SelectSingleNode("th[@class='list-count']").InnerText;
+            string listCountText = page.SearchMarkRowNode.SelectSingleNode("//div[@class='number']").InnerText;
             List<string> foundNumbersList = NumberExtractor.Instance.Extract(listCountText).ToList();
             baseData.RecordsCount = Convert.ToInt32(foundNumbersList.First());
             return baseData;
@@ -153,15 +155,19 @@ namespace AruodasWebScraper.Scrap
         {
             if (!IsRecordRowNode(rowNode)) return null;
             AruodasRecordData recordData = new AruodasRecordData();
-            
+
             recordData.Id = rowNode.SelectSingleNode(".//div[@data-id]").Attributes["data-id"].Value;
             recordData.Url = rowNode.SelectSingleNode("td[2]/h3/a").Attributes["href"].Value;
 
-            string placeText = rowNode.SelectSingleNode("td[2]/h3/a").InnerText;
-            string[] placeTextSplittedAndFormatted = placeText.Split(',').Select((unformattedPlaceText => { return _placeTextFormatter.Replace(unformattedPlaceText, ""); })).ToArray();
-            recordData.City = placeTextSplittedAndFormatted.Count() > 0 ? placeTextSplittedAndFormatted[0] : "";
-            recordData.Borough = placeTextSplittedAndFormatted.Count() > 1 ? placeTextSplittedAndFormatted[1] : "";
-            recordData.Street = placeTextSplittedAndFormatted.Count() > 2 ? placeTextSplittedAndFormatted[2] : "";
+            string placeText = rowNode.SelectSingleNode("td[2]/h3/a").InnerHtml;
+            if (placeText.IndexOf("<br>") >= 0)
+            {
+                string[] placeTextLines = placeText.Split(new string[] { "<br>" }, StringSplitOptions.None);
+                string[] placeTextSplittedAndFormatted = placeTextLines[0].Split(',').Select((unformattedPlaceText => { return _placeTextFormatter.Replace(unformattedPlaceText, ""); })).ToArray();
+                recordData.City = placeTextSplittedAndFormatted.Count() > 1 ? placeTextSplittedAndFormatted[0] : "";
+                recordData.Borough = placeTextSplittedAndFormatted.Count() > 1 ? placeTextSplittedAndFormatted[1] : placeTextSplittedAndFormatted[0];
+                recordData.Street = placeTextLines[1];
+            }
 
             string roomsCountText = rowNode.SelectSingleNode("td[3]").InnerText;
             List<string> foundNumbersList = NumberExtractor.Instance.Extract(roomsCountText).ToList();
