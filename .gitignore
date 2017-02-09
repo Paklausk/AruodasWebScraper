@@ -1,0 +1,11 @@
+*.suo
+*.obj
+*.pdb
+*.db
+*.mdf
+*.ldf
+*.old
+.vs/**
+bin/**
+obj/**
+packages/**
