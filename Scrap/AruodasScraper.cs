@@ -164,9 +164,9 @@ namespace AruodasWebScraper.Scrap
             {
                 string[] placeTextLines = placeText.Split(new string[] { "<br>" }, StringSplitOptions.None);
                 string[] placeTextSplittedAndFormatted = placeTextLines[0].Split(',').Select((unformattedPlaceText => { return _placeTextFormatter.Replace(unformattedPlaceText, ""); })).ToArray();
-                recordData.City = placeTextSplittedAndFormatted.Count() > 1 ? placeTextSplittedAndFormatted[0] : "";
-                recordData.Borough = placeTextSplittedAndFormatted.Count() > 1 ? placeTextSplittedAndFormatted[1] : placeTextSplittedAndFormatted[0];
-                recordData.Street = placeTextLines[1];
+                recordData.City = placeTextSplittedAndFormatted.Count() > 1 ? TrimText(placeTextSplittedAndFormatted[0]) : "";
+                recordData.Borough = TrimText(placeTextSplittedAndFormatted.Count() > 1 ? placeTextSplittedAndFormatted[1] : placeTextSplittedAndFormatted[0]);
+                recordData.Street = TrimText(placeTextLines[1]);
             }
 
             string roomsCountText = rowNode.SelectSingleNode("td[3]").InnerText;
@@ -190,6 +190,10 @@ namespace AruodasWebScraper.Scrap
         bool IsRecordRowNode(HtmlNode rowNode)
         {
             return rowNode.SelectNodes("td").Count > MIN_RECORD_ROW_COLUMNS;
+        }
+        string TrimText(string text)
+        {
+            return text.Trim('\n', ' ');
         }
     }
     public class AruodasRecordDataCollection : List<AruodasRecordData>
