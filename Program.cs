@@ -20,6 +20,8 @@ namespace AruodasWebScraper
         }
         private static void OnRecordDataExtracted(AruodasRecordData recordData)
         {
+            if (recordData == null)
+                return;
             var d = recordData;
             Console.WriteLine(string.Format("Id={0}, City={1}, Borough={2}, Street={3}, RoomsCount={4}, Area={5}m^2, Floor={6}/{7}, Price={8}Eur", d.Id, d.City, d.Borough, d.Street, d.RoomsCount, d.Area, d.Floor, d.TotalFloors, d.Price));
             System.Threading.Thread.Sleep(2000);
