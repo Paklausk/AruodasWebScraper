@@ -74,7 +74,7 @@ namespace AruodasWebScraper.Scrap
         public HtmlNode PagingNode { get; set; }
         public AruodasPage(HtmlDocument htmlDoc)
         {
-            MainContentNode = htmlDoc.DocumentNode.SelectSingleNode("//div[@class='main-content']");
+            MainContentNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class,'main-content')]");
             RecordsTableHeaderRowNode = MainContentNode.SelectSingleNode("//table[@class='list-search']/thead/tr");
             SearchMarkRowNode = MainContentNode.SelectSingleNode("//table[@class='list-search']/tbody/tr[@class='search-mark']");
             RecordsRowNodes = MainContentNode.SelectNodes("//table[@class='list-search']/tbody/tr[contains(@class, 'list-row')]");
